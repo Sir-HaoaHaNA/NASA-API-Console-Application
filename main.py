@@ -8,7 +8,7 @@ import os
 load_dotenv()
 
 # Access environment variables
-api_key = os.getenv('API_KEY')
+API_KEY = os.getenv('API_KEY')
 
 # The Base Url for the API enteries 
 BASE_URL = "https://api.nasa.gov"
