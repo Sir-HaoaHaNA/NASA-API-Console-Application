@@ -13,8 +13,61 @@ API_KEY = os.getenv('API_KEY')
 # The Base Url for the API enteries 
 BASE_URL = "https://api.nasa.gov"
 
+# Saves the data to a save file
+def write_save_data(text, data):
+    while True:
+        answer = input("\nWould you like to save this data? y/n ")
+        if answer == "y":
+            with open(text, "a") as file:
+                file.write(data + "\n")
+            break
+        elif answer == "n":
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+# Gets the user's save data
+def read_save_data():
+    while True:
+        print("\nwhich save data do you want to load?")
+        print("1. Astronomy Picture of the Day")
+        print("2. Mars Rover Photos")
+        print("3. Earth Imagery")
+        print("4. Near-Earth Objects (Asteroids)")
+        print("5. EONET Natural Events")
+        print("6. DONKI Space Weather Notifications")
+        print("7. Go To Home Menu")
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            text = "fetch_apod.txt"
+        elif choice == "2":
+            text = "fetch_mars_rover_photos.txt"
+        elif choice == "3":
+            text = "fetch_earth_imagery.txt"
+        elif choice == "4":
+            text = "fetch_neo_ws.txt"
+        elif choice == "5":
+            text = "fetch_eonet_events.txt"
+        elif choice == "6":
+            text = "fetch_donki.txt"
+        elif choice == "7":
+            break
+        else:
+            print("Invalid choice. Please try again.")
+            continue
+
+        if os.path.exists(text):
+            with open(text, "r") as file:
+                for line in file:
+                    print(line.strip())
+            break
+        else:
+            print(f"{text} not found.")
+
 # Gets NASA's Astronomy Picture of the Day
 def fetch_apod():
+    text = "fetch_apod.txt"
     url = f"{BASE_URL}/planetary/apod?api_key={API_KEY}"
     response = requests.get(url).json()
 
@@ -22,9 +75,12 @@ def fetch_apod():
     print("Title:", response.get("title"))
     print("Explanation:", response.get("explanation"))
     print("URL:", response.get("url"))
+    data = (f"Astronomy Picture of the Day:\nTitle: {response.get("title")} Explanation: {response.get("explanation")} URL: {response.get("url")}")
+    write_save_data(text, data)
 
 # Gets Mars Rover's Photos from a set day
 def fetch_mars_rover_photos():
+    text = "fetch_mars_rover_photos.txt"
     date = input("Enter Earth date (YYYY-MM-DD) for Mars rover photos: ")
     url = f"{BASE_URL}/mars-photos/api/v1/rovers/curiosity/photos?earth_date={date}&api_key={API_KEY}"
     response = requests.get(url).json()
@@ -39,9 +95,12 @@ def fetch_mars_rover_photos():
     print(f"Found {len(photos)} photos.")
     for photo in photos[:limit]: 
         print(photo["img_src"])
+        data = photo["img_src"]
+        write_save_data(text, data)
 
 # Gets a image of the earth from a setish day, at a set longitude and latitude.
 def fetch_earth_imagery():
+    text = "fetch_earth_imagery.txt"
     lat = input("Enter latitude: ")
     lon = input("Enter longitude: ")
     dim = input("Enter width and height of image in degrees (between 1 and 0) that you want the image:")
@@ -50,9 +109,13 @@ def fetch_earth_imagery():
     url = f"https://api.nasa.gov/planetary/earth/imagery?lon={lon}&lat={lat}&date={date}&dim={dim}&api_key={API_KEY}"
 
     print("Earth Imagery URL:", url)
+    data = (f"Earth Imagery URL: {url}")
+
+    write_save_data(text, data)
 
 # Gets near Earth Objects on a set day
 def fetch_neo_ws():
+    text = "fetch_neo_ws.txt"
     start_date = input("Enter start date (YYYY-MM-DD) for asteroid data: ")
     end_date = input("Enter end date (YYYY-MM-DD) for asteroid data: ")
     url = f"{BASE_URL}/neo/rest/v1/feed?start_date={start_date}&start_date={end_date}&api_key={API_KEY}"
@@ -68,7 +131,9 @@ def fetch_neo_ws():
     print(f"Found {len(neos)} asteroids.")
     for neo in neos[:limit]:
         print("Name:", neo["name"])
-        print("Magnitude:", neo["absolute_magnitude_h"])
+        print("Magnitude:", neo["absolute_magnitude_h"], "\n")
+        data = (f"Name: {neo["name"]}\nMagnitude: {neo["absolute_magnitude_h"]}\n\n")
+        write_save_data(text, data)
 
 # Gets a set satelite location data
 def fetch_satellite_location():
@@ -114,7 +179,7 @@ def fetch_satellite_location():
 
 # Gets a set number of The Earth Observatory Natural Event Tracker most recent open events.
 def fetch_eonet_events():    
-    
+    text = "fetch_eonet_events.txt"
     url = f"https://eonet.gsfc.nasa.gov/api/v3/events"
     response = requests.get(url).json()
     limit = input("How many most recent open events would you like to view?: ")
@@ -126,15 +191,20 @@ def fetch_eonet_events():
 
     for event in response.get("events", [])[:limit]:
         print("Event:", event.get("title"), "\nCategorie: ", event.get("categories", [{}])[0].get("title", "No title available"), "\nLink: ", event.get("link"), "\n\n")
+        data = (f"Event: {event.get("title")} \nCategorie:  {event.get("categories", [{}])[0].get("title", "No title available")} \nLink:  {event.get("link")} \n\n")
+        write_save_data(text, data)
 
 # Gets The Space Weather Database Of Notifications, Knowledge, Information
 def fetch_donki():
+    text = "fetch_donki.txt"
     url = f"{BASE_URL}/DONKI/notifications?api_key={API_KEY}"
     response = requests.get(url).json()
 
     for notification in response[:5]:
         print("Type:", notification.get("messageType"))
         print("Message:", notification.get("messageBody"))
+        data = (f"Type: {notification.get("messageType")} Message: {notification.get("messageBody")}")
+        write_save_data(text, data)
 
 # The main function
 def main():
@@ -147,7 +217,8 @@ def main():
         print("5. Satellite Situation Center")
         print("6. EONET Natural Events")
         print("7. DONKI Space Weather Notifications")
-        print("8. Exit")
+        print("8. Load my saved data")
+        print("9. Exit")
         choice = input("Select an option: ")
 
         if choice == "1":
@@ -165,6 +236,8 @@ def main():
         elif choice == "7":
             fetch_donki()
         elif choice == "8":
+            read_save_data()
+        elif choice == "9":
             print("Exiting...")
             break
         else:
